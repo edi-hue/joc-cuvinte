@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Word Wonders Pro - Românesc</title>
+    <style>
+        :root {
+            --accent-color: #ffd166;
+            --success-color: #06d6a0;
+            --card-bg: rgba(255, 255, 255, 0.2);
+            --card-border: rgba(255, 255, 255, 0.4);
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1s ease-in-out;
+        }
+
+        body.bg-mountains {
+            background-image: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1000&q=80');
+        }
+
+        body.bg-waterfall {
+            background-image: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=1000&q=80');
+        }
+
+        header {
+            width: 100%;
+            max-width: 450px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .level-badge {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--card-border);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .gems-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 14px;
+            border-radius: 20px;
+            color: #4cc9f0;
+            font-weight: bold;
+            font-size: 1.1rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-shop-trigger {
+            background: linear-gradient(135deg, #7209b7, #f72585);
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(247, 37, 133, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .words-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+            max-width: 450px;
+            padding: 10px;
+            z-index: 5;
+        }
+
+        .word-row { display: flex; gap: 6px; }
+
+        .letter-tile {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .letter-tile.revealed {
+            background: var(--success-color);
+            border-color: #fff;
+            color: #fff;
+            animation: popIn 0.3s ease;
+        }
+
+        .preview-box {
+            height: 35px;
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            letter-spacing: 3px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            margin-bottom: 5px;
+            z-index: 5;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            z-index: 5;
+        }
+
+        .svg-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .node-btn {
+            position: absolute;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #1a1a2e;
+            font-size: 1.6rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.15);
+            transition: transform 0.25s ease, background-color 0.2s, opacity 0.25s;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .node-btn.selected {
+            background: var(--accent-color);
+            color: #000;
+            transform: translate(-50%, -50%) scale(1.18);
+            box-shadow: 0 0 18px var(--accent-color);
+        }
+
+        .node-btn.animating {
+            opacity: 0.2;
+            transform: translate(-50%, -50%) scale(0.5) rotate(180deg);
+        }
+
+        .btn-shuffle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s;
+        }
+
+        .btn-shuffle:active {
+            transform: translate(-50%, -50%) rotate(180deg) scale(0.9);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            z-index: 5;
+        }
+
+        .btn-action {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .shop-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            width: 90%;
+            max-width: 380px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+        }
+
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .shop-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #4cc9f0;
+        }
+
+        .btn-close-shop {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .shop-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .shop-item-icon { font-size: 1.8rem; }
+
+        .shop-item-title {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .shop-item-sub {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #06d6a0, #1b9aaa);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-buy-ad {
+            background: linear-gradient(135deg, #ff9f43, #ff5252);
+            box-shadow: 0 4px 10px rgba(255, 159, 67, 0.3);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-mountains" id="bodyBg">
+
+    <header>
+        <div class="level-badge" id="levelDisplay">Nivel 1</div>
+        <div class="header-right">
+            <div class="gems-display">💎 <span id="gemsDisplay">100</span></div>
+            <button class="btn-shop-trigger" onclick="openShop()">🛒 Magazin</button>
+        </div>
+    </header>
+
+    <div class="words-container" id="wordsContainer"></div>
+    <div class="preview-box" id="previewBox"></div>
+
+    <div class="wheel-container" id="wheelContainer">
+        <button class="btn-shuffle" onclick="shuffleLetters()" title="Amestecă literele">🔀</button>
+        <svg class="svg-canvas" id="svgCanvas"></svg>
+    </div>
+
+    <div class="actions">
+        <button class="btn-action" onclick="useHint()">💡 Indiciu (20 💎)</button>
+    </div>
+
+    <div class="modal-overlay" id="shopModal">
+        <div class="shop-card">
+            <div class="shop-header">
+                <div class="shop-title">💎 Magazin Gemuri</div>
+                <button class="btn-close-shop" onclick="closeShop()">✕</button>
+            </div>
+
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <div class="shop-item-icon">🎬</div>
+                    <div>
+                        <div class="shop-item-title">50 Gemuri</div>
+                        <div class="shop-item-sub">Uită-te la o reclamă</div>
+                    </div>
+                </div>
+                <button class="btn-buy btn-buy-ad" onclick="watchAdReward()">GRATIS</button>
+            </div>
+
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <div class="shop-item-icon">💎</div>
+                    <div>
+                        <div class="shop-item-title">100 Gemuri</div>
+                        <div class="shop-item-sub">Pachet Starter</div>
+                    </div>
+                </div>
+                <button class="btn-buy" onclick="buyGems(100, '1 RON')">1 RON</button>
+            </div>
+
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <div class="shop-item-icon">💎💎</div>
+                    <div>
+                        <div class="shop-item-title">800 Gemuri</div>
+                        <div class="shop-item-sub">Pachet Popular</div>
+                    </div>
+                </div>
+                <button class="btn-buy" onclick="buyGems(800, '5 RON')">5 RON</button>
+            </div>
+
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <div class="shop-item-icon">👑</div>
+                    <div>
+                        <div class="shop-item-title">1400 Gemuri</div>
+                        <div class="shop-item-sub">Pachet Pro</div>
+                    </div>
+                </div>
+                <button class="btn-buy" onclick="buyGems(1400, '10 RON')">10 RON</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const levelsDatabase = [
+            { letters: ["P", "A", "C"], words: ["PAC", "CAP"] },
+            { letters: ["R", "A", "C"], words: ["RAC", "CAR"] },
+            { letters: ["B", "A", "C"], words: ["BAC", "CAB"] },
+            { letters: ["A", "C", "T"], words: ["ACT", "TAC"] },
+            { letters: ["S", "A", "C"], words: ["SAC", "CAS"] },
+            { letters: ["C", "A", "L"], words: ["CAL", "LAC"] },
+            { letters: ["M", "A", "I"], words: ["MAI", "MIA"] },
+            { letters: ["F", "A", "R"], words: ["FAR", "RAF"] },
+            { letters: ["A", "R", "C"], words: ["ARC", "CAR"] },
+            { letters: ["N", "U", "C"], words: ["NUC"] },
+            { letters: ["C", "A", "R", "E"], words: ["CARE", "RAC", "ARC"] },
+            { letters: ["M", "A", "R", "E"], words: ["MARE", "RAME", "ARME"] },
+            { letters: ["P", "A", "R", "C"], words: ["PARC", "CARP", "PAC"] },
+            { letters: ["S", "T", "A", "R"], words: ["STAR", "TRAS", "SAT"] },
+            { letters: ["V", "A", "R", "A"], words: ["VARA", "VAR", "ARA"] },
+            { letters: ["C", "A", "S", "A"], words: ["CASA", "SAC", "CAS"] },
+            { letters: ["A", "R", "M", "A"], words: ["ARMA", "RAMA", "AMAR"] },
+            { letters: ["F", "L", "O", "R"], words: ["FLOR", "ROL", "FOL"] },
+            { letters: ["C", "A", "R", "T"], words: ["CART", "ARC", "RAC"] },
+            { letters: ["C", "A", "R", "T", "E"], words: ["CARTE", "CARE", "TART", "ACER"] },
+            { letters: ["S", "O", "A", "R", "E"], words: ["SOARE", "OARE", "ROAS"] },
+            { letters: ["P", "I", "A", "T", "R", "A"], words: ["PIATRA", "PATRA", "PAT", "TIR"] },
+            { letters: ["S", "A", "L", "O", "N"], words: ["SALON", "SOLAN", "OAS"] },
+            { letters: ["C", "A", "N", "A", "L"], words: ["CANAL", "LANA", "ACAN"] },
+            { letters: ["P", "L", "A", "N", "E", "T"], words: ["PLANET", "PLAN", "LENTA", "PANA"] },
+            { letters: ["C", "A", "P", "I", "T", "A"], words: ["CAPITA", "PALAT", "CALA", "CAP"] },
+            { letters: ["M", "A", "G", "A", "Z", "I"], words: ["MAGAZI", "MAGIA", "ZIMA", "GAZA"] },
+            { letters: ["F", "L", "O", "R", "I", "C"], words: ["FLORIC", "CALIF", "CORI", "CILA"] },
+            { letters: ["P", "O", "R", "T", "O", "C"], words: ["PORTOC", "PORTA", "CART", "TROP"] },
+            { letters: ["S", "P", "E", "R", "A", "N"], words: ["SPERAN", "PANTE", "SPER", "PERN"] }
+        ];
+
+        let currentLevelIndex = 0;
+        let gems = 100;
+        let currentWord = "";
+        let selectedNodes = [];
+        let isDragging = false;
+        let revealedWords = [];
+        let currentLetters = [];
+
+        const wordsContainer = document.getElementById('wordsContainer');
+        const wheelContainer = document.getElementById('wheelContainer');
+        const previewBox = document.getElementById('previewBox');
+        const svgCanvas = document.getElementById('svgCanvas');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const gemsDisplay = document.getElementById('gemsDisplay');
+        const bodyBg = document.getElementById('bodyBg');
+
+        function updateBackground(levelNum) {
+            if (levelNum <= 100) {
+                bodyBg.className = 'bg-mountains';
+            } else {
+                bodyBg.className = 'bg-waterfall';
+            }
+        }
+
+        function loadLevel(index) {
+            currentLevelIndex = index;
+            const level = levelsDatabase[currentLevelIndex % levelsDatabase.length];
+            revealedWords = [];
+            currentWord = "";
+            selectedNodes = [];
+            currentLetters = [...level.letters];
+            
+            levelDisplay.innerText = `Nivel ${currentLevelIndex + 1}`;
+            updateBackground(currentLevelIndex + 1);
+            previewBox.innerText = "";
+            
+            wordsContainer.innerHTML = "";
+            level.words.forEach(word => {
+                const row = document.createElement('div');
+                row.className = 'word-row';
+                row.dataset.word = word;
+
+                for (let i = 0; i < word.length; i++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'letter-tile';
+                    tile.dataset.index = i;
+                    row.appendChild(tile);
+                }
+                wordsContainer.appendChild(row);
+            });
+
+            setupWheel(currentLetters);
+        }
+
+        function setupWheel(letters) {
+            const existingNodes = wheelContainer.querySelectorAll('.node-btn');
+            existingNodes.forEach(n => n.remove());
+
+            const radius = 90;
+            const centerX = 130;
+            const centerY = 130;
+            const total = letters.length;
+
+            letters.forEach((letter, i) => {
+                const angle = (i * 2 * Math.PI / total) - (Math.PI / 2);
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+
+                const btn = document.createElement('div');
+                btn.className = 'node-btn';
+                btn.innerText = letter;
+                btn.style.left = `${x}px`;
+                btn.style.top = `${y}px`;
+                btn.dataset.letter = letter;
+                btn.dataset.x = x;
+                btn.dataset.y = y;
+
+                wheelContainer.appendChild(btn);
+            });
+        }
+
+        function shuffleLetters() {
+            const nodes = Array.from(wheelContainer.querySelectorAll('.node-btn'));
+            nodes.forEach(n => n.classList.add('animating'));
+
+            setTimeout(() => {
+                for (let i = currentLetters.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [currentLetters[i], currentLetters[j]] = [currentLetters[j], currentLetters[i]];
+                }
+                setupWheel(currentLetters);
+            }, 250);
+        }
+
+        function getPointerPos(e) {
+            const rect = wheelContainer.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startDrag(e) {
+            if (e.target.classList.contains('btn-shuffle')) return;
+            isDragging = true;
+            checkNodeHit(getPointerPos(e));
+        }
+
+        function moveDrag(e) {
+            if (!isDragging) return;
+            const pos = getPointerPos(e);
+            checkNodeHit(pos);
+            drawLines(pos);
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+            svgCanvas.innerHTML = "";
+
+            checkWord();
