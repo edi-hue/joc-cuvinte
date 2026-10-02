@@ -24,7 +24,7 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Install Capacitor & Dependencies
+      - name: Init Node Project and Install Capacitor
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
@@ -45,7 +45,7 @@ jobs:
           name: WordWonders-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Upload AAB Artifact (pentru Google Play)
+      - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
         with:
           name: WordWonders-AAB
